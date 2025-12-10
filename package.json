@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "node": "^20.19.6",
+    "nodemon": "^3.1.11",
+    "zod": "^4.1.13"
+  },
+  "name": "flashcards-project",
+  "description": "Développer une API RESTful pour gérer des collections de flashcards avec une méthode de répétition espacée pour l’apprentissage.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "test"
+  },
+  "author": "",
+  "license": "ISC"
+}
