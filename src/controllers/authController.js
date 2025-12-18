@@ -60,6 +60,7 @@ export const loginUser = async (req, res) => {
       userData: {
         email: found.email,
         firstName: found.firstName,
+        lastName: found.lastName,
         id: found.id,
       },
       token,
