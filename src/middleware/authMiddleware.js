@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || '1234567890changemeinproduction'
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 
 
@@ -14,11 +14,14 @@ export const authMiddleware = (req, res, next) => {
       })
     }
 
+    // Allow for "Bearer <token>" format and without "Bearer"
     const token = authHeader.startsWith('Bearer ')
       ? authHeader.slice(7)
       : authHeader
 
     const decoded = jwt.verify(token, JWT_SECRET)
+
+    // Attach decoded token data to request object
     req.user = decoded
     next()
   } catch (error) {

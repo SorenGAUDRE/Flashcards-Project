@@ -31,6 +31,48 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
+    // Allow login using an existing JWT (in Authorization header or body.token)
+    const authHeader = req.headers?.authorization
+    const tokenFromHeader = authHeader
+      ? authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : authHeader
+      : null
+    const incomingToken = tokenFromHeader || req.body?.token
+
+    if (incomingToken) {
+      try {
+        const decoded = jwt.verify(incomingToken,  JWT_SECRET)
+        const userId = decoded.userid
+
+        const [foundById] = await db
+          .select({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role })
+          .from(user)
+          .where(eq(user.id, userId))
+
+        if (!foundById) {
+          return res.status(401).json({ error: 'Invalid token or user not found' })
+        }
+
+        // Issue a fresh token and return user data (acts like login)
+        const newToken = jwt.sign({ userid: foundById.id }, JWT_SECRET, { expiresIn: '24h' })
+
+        return res.status(200).json({
+          message: 'User logged in via token',
+          userData: {
+            email: foundById.email,
+            firstName: foundById.firstName,
+            lastName: foundById.lastName,
+            id: foundById.id,
+          },
+          token: newToken,
+        })
+      } catch (err) {
+        return res.status(401).json({ error: 'Invalid or expired token' })
+      }
+    }
+
+    // Fallback: normal email/password login
     const { email, password } = req.body
 
     const [found] = await db.select({
@@ -99,7 +141,7 @@ export const refreshToken = async (req, res) => {
 
     const token = jwt.sign(
       { userid: userId },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || JWT_SECRET,
       { expiresIn: '24h' }
     )
 
