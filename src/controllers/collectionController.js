@@ -76,7 +76,7 @@ export const getCollectionById = async (req, res) => {
 export const listUserCollections = async (req, res) => {
   try {
     const requestingUserId = req.user?.userid
-
+    console.log('Requesting user ID:', requestingUserId)
     if (!requestingUserId) {
       return res.status(401).json({ message: 'Unauthorized: User not logged in' })
     }
@@ -117,6 +117,103 @@ export const searchPublicCollections = async (req, res) => {
     const matches = rows.filter((c) => (c.title || '').toLowerCase().includes(q))
 
     return res.status(200).json({ collections: matches })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
+
+export const updateCollection = async (req, res) => {
+  try {
+    const collectionId = req.params.id
+    const requestingUserId = req.user?.userid
+
+    if (!requestingUserId) {
+      return res.status(401).json({ message: 'Unauthorized: User not logged in' })
+    }
+
+    const [found] = await db
+      .select({ id: collection.id, title: collection.title, description: collection.description, isPublic: collection.isPublic, user: collection.user })
+      .from(collection)
+      .where(eq(collection.id, collectionId))
+
+    if (!found) {
+      return res.status(404).json({ message: 'Collection not found' })
+    }
+
+    if (found.user !== requestingUserId) {
+      return res.status(403).json({ message: 'Forbidden: Only the owner can modify this collection' })
+    }
+
+    const { title, description } = req.body
+    let { isPublic } = req.body
+
+    const updates = {}
+    if (typeof title !== 'undefined') updates.title = title
+    if (typeof description !== 'undefined') updates.description = description
+    if (typeof isPublic !== 'undefined') {
+      // normalize boolean/number to integer 1/0
+      if (typeof isPublic === 'boolean') {
+        updates.isPublic = isPublic ? 1 : 0
+      } else if (typeof isPublic === 'string') {
+        const lowered = isPublic.toLowerCase()
+        updates.isPublic = (lowered === '1' || lowered === 'true') ? 1 : 0
+      } else {
+        updates.isPublic = isPublic ? 1 : 0
+      }
+    }
+
+    // If no fields provided
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No updatable fields provided' })
+    }
+
+    const [updated] = await db
+      .update(collection)
+      .set(updates)
+      .where(eq(collection.id, collectionId))
+      .returning({ id: collection.id, title: collection.title, description: collection.description, isPublic: collection.isPublic, user: collection.user })
+
+    return res.status(200).json({ message: 'Collection updated', collection: updated })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
+
+// Create a new collection  
+export const deleteCollectionById = async (req, res) => {
+  try {
+    const collectionId = req.params.id
+    const requestingUserId = req.user?.userid
+
+    if (!requestingUserId) {
+      return res.status(401).json({ message: 'Unauthorized: User not logged in' })
+    }
+
+    // Fetch the collection
+    const [found] = await db
+      .select({ id: collection.id, title: collection.title, description: collection.description, isPublic: collection.isPublic, user: collection.user })
+      .from(collection)
+      .where(eq(collection.id, collectionId))
+
+    if (!found) {
+      return res.status(404).json({ message: 'Collection not found' })
+    }
+
+    // Check access permissions
+    const isOwner = found.user === requestingUserId
+
+    if (isOwner) {
+      await db
+        .delete(collection)
+        .where(eq(collection.id, collectionId))
+      return res.status(200).json({ collection: found })
+    }
+
+    return res.status(403).json({ message: 'Forbidden: You do not have access to this collection' })
   } catch (error) {
     console.error(error)
     return res.status(500).json({ message: 'Server error' })
