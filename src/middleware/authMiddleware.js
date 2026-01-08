@@ -1,9 +1,15 @@
 import jwt from 'jsonwebtoken'
+import 'dotenv/config'
+import { request } from 'express'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
-
-
+/**
+ * 
+ * @param {request} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
 export const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
@@ -15,9 +21,7 @@ export const authMiddleware = (req, res, next) => {
     }
 
     // Allow for "Bearer <token>" format and without "Bearer"
-    const token = authHeader.startsWith('Bearer ')
-      ? authHeader.slice(7)
-      : authHeader
+    const token = authHeader && authHeader.split(' ')[1]
 
     const decoded = jwt.verify(token, JWT_SECRET)
 

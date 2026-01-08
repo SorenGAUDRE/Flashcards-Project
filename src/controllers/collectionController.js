@@ -183,7 +183,7 @@ export const updateCollection = async (req, res) => {
 }
 
 
-// Create a new collection  
+// Delete a collection  
 export const deleteCollectionById = async (req, res) => {
   try {
     const collectionId = req.params.id
