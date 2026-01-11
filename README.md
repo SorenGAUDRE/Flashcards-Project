@@ -58,4 +58,4 @@ src/
 
 ## Documentation technique
 
-[Voir la documentation de l’API](./docs/API_DOCUMENTATION.md)
+[Voir la documentation de l’API](./API_DOCUMENTATION.md)
