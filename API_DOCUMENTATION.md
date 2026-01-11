@@ -567,6 +567,114 @@ API RESTful pour gérer des collections de flashcards avec révision espacée po
 
 ---
 
+### 5. Administration (Admin uniquement)
+
+#### 5.1 Lister tous les utilisateurs
+- **Méthode** : `GET`
+- **Chemin** : `/admin/users`
+- **Authentification** : Authentifiée + Admin uniquement
+- **Description** : Retourne tous les utilisateurs, triés par date de création (les plus récents en premier)
+
+**Réponse** (200) :
+```json
+{
+  "users": [
+    {
+      "id": "uuid",
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "user"
+    },
+    {
+      "id": "uuid",
+      "email": "admin@example.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin"
+    }
+  ]
+}
+```
+
+**Erreurs** :
+- 401 : Unauthorized (pas authentifié)
+- 403 : Forbidden (pas admin)
+
+---
+
+#### 5.2 Récupérer utilisateur par ID
+- **Méthode** : `GET`
+- **Chemin** : `/admin/users/:userId`
+- **Authentification** : Authentifiée + Admin uniquement
+- **Description** : Retourne les détails d'un utilisateur et ses statistiques
+
+**Route Params** :
+- `userId` : UUID de l'utilisateur
+
+**Réponse** (200) :
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "user",
+    "stats": {
+      "collectionsCount": 5,
+      "cardsCount": 42,
+      "reviewsCount": 128
+    }
+  }
+}
+```
+
+**Validation Zod** : userId doit être UUID valide
+
+**Erreurs** :
+- 404 : User not found
+- 403 : Forbidden (pas admin)
+
+---
+
+#### 5.3 Supprimer utilisateur
+- **Méthode** : `DELETE`
+- **Chemin** : `/admin/users/:userId`
+- **Authentification** : Authentifiée + Admin uniquement
+- **Description** : Supprime un utilisateur et TOUTES ses données associées
+
+**Route Params** :
+- `userId` : UUID de l'utilisateur
+
+**Réponse** (200) :
+```json
+{
+  "message": "User deleted successfully",
+  "deletedUser": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  }
+}
+```
+
+**Cascade de suppression** :
+1. Toutes les révisions de l'utilisateur (table `review`)
+2. Toutes les flashcards dans ses collections (table `card`)
+3. Toutes ses collections (table `collection`)
+4. L'utilisateur lui-même (table `user`)
+
+**Validation Zod** : userId doit être UUID valide
+
+**Erreurs** :
+- 404 : User not found
+- 400 : Cannot delete your own account (protection contre l'auto-suppression)
+- 403 : Forbidden (pas admin)
+
+---
+
 ## Authentification
 
 ### JWT Bearer Token

@@ -25,7 +25,7 @@ const seed = async () => {
 				lastName: 'Jones',
 				email: 'bob@example.com',
 				password: await bcrypt.hash('secret', salt),
-				role: 'user',
+				role: 'admin',
 			},
 		]
 

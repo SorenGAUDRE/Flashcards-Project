@@ -4,6 +4,7 @@ import authRouter from './routers/authRouter.js'
 import collectionRouter from './routers/collectionRouter.js'
 import cardRouter from './routers/cardRouter.js'
 import reviewRouter from './routers/reviewRouter.js'
+import adminRouter from './routers/adminRouter.js'
 
 dotenv.config()
 
@@ -28,6 +29,8 @@ app.use('/api/collection', collectionRouter)
 app.use('/api/card', cardRouter)
 // API 
 app.use('/api/review', reviewRouter)
+// API 
+app.use('/api/admin', adminRouter)
 
 // 404 handler
 app.use((req, res) => {
